@@ -1,35 +1,65 @@
 (function($){
-  // Search
-  var $searchWrap = $('#search-form-wrap'),
-    isSearchAnim = false,
-    searchAnimDuration = 200;
 
-  var startSearchAnim = function(){
-    isSearchAnim = true;
-  };
+  // Caption
+  $('.article-entry').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
 
-  var stopSearchAnim = function(callback){
-    setTimeout(function(){
-      isSearchAnim = false;
-      callback && callback();
-    }, searchAnimDuration);
-  };
+      var alt = this.alt;
 
-  $('.nav-search-btn').on('click', function(){
-    if (isSearchAnim) return;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
 
-    startSearchAnim();
-    $searchWrap.addClass('on');
-    stopSearchAnim(function(){
-      $('.search-form-input').focus();
+      $(this).wrap('<a href="' + $(this).attr('src') + '" title="' + alt + '" class="fancybox"></a>');
+    });
+
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
     });
   });
 
-  $('.search-form-input').on('blur', function(){
-    startSearchAnim();
-    $searchWrap.removeClass('on');
-    stopSearchAnim();
+  if ($.fancybox){
+    $('.fancybox').fancybox();
+  }
+
+  //Remove search input icon
+  $('input[type=search]').removeAttr('results');
+
+  function startWindowAnim(){
+    $('#header').addClass('open');
+    $('#wrap > .outer').addClass('open');
+    $('#footer').addClass('open');
+  }
+
+  //Set image scrollLoading
+  $('.article-entry img').each(function() {
+    $(this).attr('data-url', $(this).attr('src'));
+    $(this).removeAttr('src');
+    $(this).addClass('scrollLoading');
+    $(this).wrap('<div class="img-wrap"></div>');
   });
+
+  var imgCount,
+      timer = setInterval(function () {
+        if(imgCount <= 0)
+          clearInterval(timer);
+        isLoaded();
+      }, 500);
+
+  var isLoaded = function () {
+    $('.scrollLoading').each(function (i, img) {
+      if($(this).height() > 0 && $(this).parents('.img-wrap').length) {
+        if($(this).parent().hasClass('img-wrap'))
+          $(this).unwrap();
+        else
+          $(this).parent().unwrap();
+      }
+    });
+    imgCount = $('.img-wrap').length;
+  }
+
+  $('.scrollLoading').scrollLoading();
+
+  setTimeout(startWindowAnim, 1);
 
   // Share
   $('body').on('click', function(){
@@ -41,7 +71,6 @@
       url = $this.attr('data-url'),
       encodedUrl = encodeURIComponent(url),
       id = 'article-share-box-' + $this.attr('data-id'),
-      title = $this.attr('data-title'),
       offset = $this.offset();
 
     if ($('#' + id).length){
@@ -56,10 +85,10 @@
         '<div id="' + id + '" class="article-share-box">',
           '<input class="article-share-input" value="' + url + '">',
           '<div class="article-share-links">',
-            '<a href="https://twitter.com/intent/tweet?text=' + encodeURIComponent(title) + '&url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"><span class="fa fa-twitter"></span></a>',
-            '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"><span class="fa fa-facebook"></span></a>',
-            '<a href="http://pinterest.com/pin/create/button/?url=' + encodedUrl + '" class="article-share-pinterest" target="_blank" title="Pinterest"><span class="fa fa-pinterest"></span></a>',
-            '<a href="https://www.linkedin.com/shareArticle?mini=true&url=' + encodedUrl + '" class="article-share-linkedin" target="_blank" title="LinkedIn"><span class="fa fa-linkedin"></span></a>',
+            '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+            '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+            '<a href="http://pinterest.com/pin/create/button/?url=' + encodedUrl + '" class="article-share-pinterest" target="_blank" title="Pinterest"></a>',
+            '<a href="https://plus.google.com/share?url=' + encodedUrl + '" class="article-share-google" target="_blank" title="Google+"></a>',
           '</div>',
         '</div>'
       ].join('');
@@ -86,53 +115,20 @@
     window.open(this.href, 'article-share-box-window-' + Date.now(), 'width=500,height=450');
   });
 
-  // Caption
-  $('.article-entry').each(function(i){
-    $(this).find('img').each(function(){
-      if ($(this).parent().hasClass('fancybox') || $(this).parent().is('a')) return;
-
-      var alt = this.alt;
-
-      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
-
-      $(this).wrap('<a href="' + this.src + '" data-fancybox=\"gallery\" data-caption="' + alt + '"></a>')
-    });
-
-    $(this).find('.fancybox').each(function(){
-      $(this).attr('rel', 'article' + i);
-    });
+  //Open search box
+  $('#nav-search-btn').on('click', function(){
+    $('#search-form-wrap').toggleClass('on');
+    $('#main-nav').toggleClass('off');
   });
-
-  if ($.fancybox){
-    $('.fancybox').fancybox();
-  }
+  //When click other element. close search box
+  $("#wrap > .outer").on('click', function(){
+    $('#search-form-wrap').removeClass('on');
+    $('#main-nav').removeClass('off');
+  });
 
   // Mobile nav
-  var $container = $('#container'),
-    isMobileNavAnim = false,
-    mobileNavAnimDuration = 200;
-
-  var startMobileNavAnim = function(){
-    isMobileNavAnim = true;
-  };
-
-  var stopMobileNavAnim = function(){
-    setTimeout(function(){
-      isMobileNavAnim = false;
-    }, mobileNavAnimDuration);
-  }
-
   $('#main-nav-toggle').on('click', function(){
-    if (isMobileNavAnim) return;
-
-    startMobileNavAnim();
-    $container.toggleClass('mobile-nav-on');
-    stopMobileNavAnim();
+    $('#mobile-nav').toggleClass('off');
   });
 
-  $('#wrap').on('click', function(){
-    if (isMobileNavAnim || !$container.hasClass('mobile-nav-on')) return;
-
-    $container.removeClass('mobile-nav-on');
-  });
 })(jQuery);
