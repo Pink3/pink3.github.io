@@ -60,7 +60,7 @@ input:focus, textarea:focus {
 .portfolio-content p {
 	font-weight: 300;
     line-height: 28px;
-    argin: 22px 0 22px 0;
+    margin: 22px 0 22px 0;
 }
 
 .portfolio-content a {
@@ -206,7 +206,7 @@ h1, h2, h3 {
 	margin: 0 auto;
 	text-align: center;
 }
-.page-nav a,span {
+.page-nav a, .page-nav span {
 	font-size: 1.3rem;
 	/*font-family: 'Crimson Text', sans-serif;*/
 	font-family: 'Open Sans', "Microsoft Yahei";
@@ -215,16 +215,15 @@ h1, h2, h3 {
 	margin: 0 15px;
 	color: #333;
 	border: 1px solid #333;
-    PADDING-RIGHT: 10px;
-    PADDING-LEFT: 10px;
-    PADDING-BOTTOM: 2px;
-    COLOR: #333;
-    MARGIN-RIGHT: 2px;
-    PADDING-TOP: 2px;
-    TEXT-DECORATION: none;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-bottom: 2px;
+    margin-right: 2px;
+    padding-top: 2px;
+    text-decoration: none;
     border-radius: 2px;
 }
 .page-nav a:hover{
-	COLOR: #fff;
+	color: #fff;
     background-color: #202020;
 }
