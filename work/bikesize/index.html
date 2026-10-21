@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BIKESIZE · 公路车几何对比与尺码推荐</title>
+<link rel="icon" href="/favicon/favicon.ico">
+<style>  position:absolute;
+  top:8px;
+  left:54px;
+  width:80px;
+  height:160px;
+  background:#FFFFFF;
+  border:1px solid #C2D3E8;
+  border-radius:10px;
+  box-shadow:0 5px 10px rgba(0,0,0,.10);
+  z-index:20;
+  cursor:pointer;
+  overflow:hidden;
+}
+#miniChart{
+  width:100%;
+  height:100%;
+}
+/* ★ 红点信息按钮：左上角 */
+.mini-info-btn{
+  position:absolute;
+  top:4px;
+  left:4px;
+  width:16px;
+  height:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1.4px solid #e53935;
+  background:rgba(255,255,255,.9);
+  color:#e53935;
+  border-radius:50%;
+  font-size:11px;
+  font-weight:900;
+  line-height:0;
+  font-family:Georgia,serif;
+  cursor:pointer;
+  padding:0;
+  pointer-events:auto;
+  z-index:21;
+  transition:.15s;
+  touch-action:manipulation;
+}
+.mini-info-btn:hover{
+  background:#e53935;
+  color:#fff;
+}
+
+/* ★ 图表上的锁定标记：3→0.9→1 缩入 / 1→2 缩出 */
+.chart-lock-marker{
+  position:absolute;
+  display:none;
+  width:20px;
+  height:20px;
+  margin-left:-10px;   /* 让 left/top 落在锁的中心点 */
+  margin-top:-10px;
+  z-index:26;
+  pointer-events:none;
+  opacity:0;
+  transform:scale(.2);
+  transform-origin:center center;
+  will-change:transform,opacity;
+}
+.chart-lock-marker.show{
+  display:block;
+  animation: lockPopIn .4s cubic-bezier(.22,1.2,.36,1) forwards;
+}
+.chart-lock-marker.hide{
+  display:block;
+  animation: lockPopOut .1s cubic-bezier(.4,0,.7,.4) forwards;
+}
+@keyframes lockPopIn {
+  0%   { transform: scale(12);   opacity: 0; }
+  75%  { transform: scale(.9);  opacity: 1; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+@keyframes lockPopOut {
+  0%   { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(2);   opacity: 0; }
+}
+
+.node-popup{position:absolute;z-index:100;background:rgba(255,255,255,.4);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.2);padding:10px 14px;font-size:12px;line-height:1.65;max-width:260px;min-width:160px;pointer-events:none;display:none;color:#333;backdrop-filter:blur(4px) saturate(1.3);-webkit-backdrop-filter:blur(4px) saturate(1.3);text-shadow:0 0 2px rgba(255,255,255,.9),0 0 4px rgba(255,255,255,.7)}
+.node-popup.show{display:block}
+.node-popup b{color:#2b5ba8}
+.node-popup .np-row{margin:2px 0}
+.node-popup .np-key{color:#666}
+.node-popup .np-val{color:#222;font-weight:700}
+.node-popup .np-divider{margin:8px 0 6px;padding-top:8px;border-top:1px dashed #ddd}
+.node-popup .np-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;pointer-events:auto;padding:6px 0;margin:2px -6px 0}
+.node-popup .np-btn{padding:3px 10px;border-radius:10px;border:1px solid #cddcee;background:#f8fbff;color:#2b5ba8;font-size:11px;font-weight:600;cursor:pointer;pointer-events:auto;transition:all .15s;font-family:inherit}
+.node-popup .np-btn:hover{background:#eaf2fb}
+.node-popup .np-btn.active{background:#2b5ba8;color:#fff;border-color:#2b5ba8}
+.node-popup .np-focus-row{pointer-events:auto;padding:7px 0 3px;margin:4px 0 0;display:flex;align-items:center;justify-content:center;min-height:48px}
+.node-popup .np-btn-focus{display:block;width:100%;box-sizing:border-box;background:rgba(234,250,241,.95);border:1.5px solid #27ae60;color:#1e7e34;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;pointer-events:auto;text-align:center;transition:all .18s;font-family:inherit}
+.node-popup .np-btn-focus:hover{background:#27ae60;color:#fff}
+.node-popup .np-hint{font-size:11px;color:#999;margin-top:6px;text-align:center;pointer-events:auto}
+.hidden{display:none!important}
+.focus-toggle{position:absolute;z-index:10;right:20px;bottom:81px;padding:4px 12px;border:1px solid #d0d5dd;border-radius:14px;background:#fff;color:#666;font-weight:bold;font-size:12.5px;cursor:pointer;user-select:none;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:color .2s,border-color .2s;min-width:82px;text-align:center;white-space:nowrap;touch-action:manipulation}
+.focus-toggle.active{color:#27ae60;border-color:#27ae60;background:#eafaf1;box-shadow:0 1px 4px rgba(39,174,96,.25)}
+.select-all-toggle{position:absolute;z-index:10;right:20px;bottom:52px;padding:4px 12px;border:1px solid #d0d5dd;border-radius:14px;background:#fff;color:#666;font-weight:bold;font-size:12.5px;cursor:pointer;user-select:none;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:color .2s,border-color .2s;min-width:82px;text-align:center;white-space:nowrap;touch-action:manipulation}
+.select-all-toggle.active{color:#2b5ba8;border-color:#2b5ba8;background:#eef4fb;box-shadow:0 1px 4px rgba(43,91,168,.25)}
+.legend-panel{width:100%;padding:0 16px 10px;background:#fff}
+.sort-bar{display:flex;gap:8px;padding:10px 0 8px;justify-content:center;align-items:center;border-top:1px solid #f2f4f7}
+.sort-wrap{position:relative;flex:1;max-width:220px;min-width:0}
+.sort-wrap select{display:block;width:100%;padding:5px 12px;border:1.5px solid #2b5ba8;border-radius:14px;background:#2b5ba8;color:transparent;-webkit-text-fill-color:transparent;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;white-space:nowrap;box-shadow:0 2px 6px rgba(43,91,168,.3);text-align:center;text-align-last:center;transition:background .18s,border-color .18s,box-shadow .18s}
+.sort-wrap select option{color:#222;background:#fff;font-weight:600;-webkit-text-fill-color:initial}
+.sort-wrap select:hover{background:#244d92;border-color:#244d92}
+.sort-wrap select[data-kind="str"]{background:#27ae60;border-color:#27ae60;box-shadow:0 2px 6px rgba(39,174,96,.3)}
+.sort-wrap select[data-kind="standover"]{background:#e67e22;border-color:#e67e22;box-shadow:0 2px 6px rgba(230,126,34,.3)}
+.sort-wrap select[data-kind="origin"]{background:#7f8c8d;border-color:#7f8c8d;box-shadow:0 2px 6px rgba(127,140,141,.3)}
+.sort-wrap select[data-kind="search"]{background:#8e44ad;border-color:#8e44ad;box-shadow:0 2px 6px rgba(142,68,173,.35)}
+.sort-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;color:#fff;font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 12px}
+.search-overlay{
+  position:absolute; inset:0; z-index:15;
+  display:flex; align-items:stretch;
+  background:#fff;
+  border-radius:999px;
+  border:1.5px solid #8e44ad;
+  overflow:hidden;
+  box-shadow:0 2px 10px rgba(142,68,173,.25);
+  padding:0;
+}
+.search-overlay input{
+  flex:1; min-width:0;
+  border:none; outline:none;
+  padding:0 6px 0 16px;
+  font-size:16px; font-family:inherit; color:#333;
+  background:transparent;
+}
+.search-overlay button{
+  margin-right: 0px;
+  flex:0 0 56px; width:56px;
+  border:none;
+  border-radius:999px;
+  background:#8e44ad;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  padding:0;
+  transition:background .18s;
+  touch-action:manipulation;
+}
+.search-overlay button:hover{background:#7d3c98}
+.search-overlay button:active{background:#6c3483}
+.search-overlay button svg{pointer-events:none;display:block;flex-shrink:0}
+.info-btn{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border:1.6px solid #e53935;background:#fff;color:#e53935;border-radius:50%;font-size:12px;font-weight:900;cursor:pointer;padding:0;line-height:0;font-family:Georgia,serif;transition:.15s;touch-action:manipulation;vertical-align:middle;margin:0;position:relative;top:0;flex-shrink:0}
+.info-btn:hover{background:#e53935;color:#fff}
+.info-btn:active{transform:scale(.9)}
+.sort-bar .info-btn{margin:0}
+.legend-chips-scroll{max-height:215px;overflow-y:auto;overflow-x:hidden;padding:0;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-overflow-scrolling:touch}
+.legend-chips-scroll.dragging{cursor:grabbing}
+.legend-chips-scroll::-webkit-scrollbar{width:6px}
+.legend-chips-scroll::-webkit-scrollbar-thumb{background:#c2d3e8;border-radius:3px}
+.legend-chips-scroll::-webkit-scrollbar-thumb:hover{background:#a8bfd8}
+.legend-chips-scroll::-webkit-scrollbar-track{background:#f8fafc;border-radius:3px}
+.legend-chips{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px 9px;padding:10px 0 12px}
+.legend-meta{display:flex;justify-content:center;align-items:center;gap:10px;padding:8px 0 4px;font-size:11px;color:#98a2b3;font-weight:500;letter-spacing:.2px;border-top:1px solid #f2f4f7;flex-wrap:wrap}
+.legend-meta strong{color:#667085;font-weight:700;font-variant-numeric:tabular-nums}
+.legend-meta .meta-dot{color:#cbd5e1}
+.legend-meta .meta-hint{color:#b0b9c6;font-style:italic}
+.legend-chip{position:relative;display:inline-flex;align-items:center;gap:6px;padding:5px 12px 9px;border-radius:16px;border:2px solid #eef2f7;background:#fafbfc;color:#333;font-weight:700;font-size:12.5px;cursor:pointer;user-select:none;white-space:nowrap;transition:background .18s,border-color .18s,box-shadow .18s,color .18s;touch-action:manipulation;overflow:hidden;box-sizing:border-box}
+.legend-chip:hover{background:#eef3fa;border-color:#d8e0ea}
+.legend-chip.active{background:#fff;border-color:#d8e0ea;box-shadow:0 1px 4px rgba(43,91,168,.12)}
+.legend-chip:not(.active){opacity:.42;filter:grayscale(.9);background:#f5f6f8}
+.legend-chip.focused{border-color:#27ae60;box-shadow:0 0 0 3px rgba(39,174,96,.3), 0 0 14px rgba(39,174,96,.6);opacity:1!important;filter:none!important;background:#fff;color:#1e7e34;z-index:2}
+.legend-chip.focused:hover{box-shadow:0 0 0 4px rgba(39,174,96,.35), 0 0 18px rgba(39,174,96,.7)}
+.legend-chip.locked{border-color:#1e8449;box-shadow:0 0 0 3px rgba(30,132,73,.45), 0 0 18px rgba(30,132,73,.75);background:#f0fdf4;color:#1e7e34}
+.legend-chip.locked:hover{box-shadow:0 0 0 4px rgba(30,132,73,.5), 0 0 22px rgba(30,132,73,.85)}
+.chip-progress-track{position:absolute;left:0;right:0;bottom:0;height:8px;background:#e6ebf2;box-shadow:inset 0 1px 0 rgba(0,0,0,.07);pointer-events:none;z-index:0}
+.chip-progress-bar{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;pointer-events:none;z-index:1;box-shadow:0 0 7px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.5);transition:width .42s cubic-bezier(.25,1,.42,1)}
+.legend-chip:not(.active) .chip-progress-track{opacity:.55}
+.legend-chip:not(.active) .chip-progress-bar{opacity:.55}
+@keyframes chipAppear{from{opacity:0;transform:scale(.86)}to{transform:scale(1)}}
+.legend-chip.chip-appear{animation:chipAppear .2s ease-out both}
+@keyframes chipSortPop{0%{opacity:0;transform:scale(.45)}62%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+.legend-chip.chip-appear-sort{animation:chipSortPop .28s cubic-bezier(.34,1.4,.64,1) both;animation-delay:calc(var(--chip-i,0) * 11ms)}
+.str-display{position:absolute;left:52px;bottom:48px;z-index:9;background:rgba(255,255,255,.92);border:1px solid #e2e8f0;border-radius:14px;padding:4px 10px;font-size:11px;color:#5a6472;font-weight:600;display:flex;align-items:center;gap:6px;box-shadow:0 1px 4px rgba(0,0,0,.08);max-width:calc(100% - 70px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;cursor:pointer;user-select:none;touch-action:manipulation}
+.str-display:hover{background:#fff;border-color:#c2d3e8;box-shadow:0 2px 6px rgba(43,91,168,.15)}
+.str-display.standover-mode{background:rgba(255,245,235,.95);border-color:#f5cba7}
+.str-display.standover-mode:hover{background:#fff5eb;border-color:#e67e22;box-shadow:0 2px 6px rgba(230,126,34,.2)}
+.str-display.standover-mode .str-value{color:#d35400}
+.str-display .str-info-btn{width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #e53935;background:#fff;color:#e53935;border-radius:50%;font-size:9px;font-weight:900;line-height:0;font-family:Georgia,serif;flex-shrink:0}
+.str-display:hover .str-info-btn{background:#e53935;color:#fff}
+.str-display .str-value{color:#2b5ba8;font-weight:800}
+.str-display .str-brand{font-weight:900;color:#2b5ba8}
+.str-display.standover-mode .str-brand{color:#d35400}
+@keyframes strDisplayPop{0%{transform:scale(.35, .5); opacity:0;}55%{opacity:1;}100%{transform:scale(1, 1); opacity:1;}}
+.str-display.str-display-pop{animation:strDisplayPop .34s cubic-bezier(.34,1.4,.64,1) both;transform-origin: 0% 50%;}
+.control-panel{background:#fff;padding:16px 30px 15px;border-radius:0 0 12px 12px;box-shadow:0 6px 20px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:11px;width:100%;max-max-width:100%;border-top:1px solid #eee}
+.control-row{display:flex;align-items:center;gap:14px;width:100%}
+.control-panel label{font-weight:700;font-size:13.5px;color:#4b5563;white-space:nowrap}
+.slider-container{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.slider-container input[type=range]{flex:1;min-width:0;height:10px;-webkit-appearance:none;background:#ddd;border-radius:5px;outline:none;transition:background .25s}
+.slider-container input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;background:#fff;border:3px solid #2b5ba8;border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2);transform:scale(1);transform-origin:center center;transition:opacity .18s ease, transform .18s cubic-bezier(.33,1,.68,1), border-color .25s}
+.slider-container input[type=range]::-moz-range-thumb{width:20px;height:20px;background:#fff;border:3px solid #2b5ba8;border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2);transform:scale(1);transform-origin:center center;transition:opacity .18s ease, transform .18s cubic-bezier(.33,1,.68,1), border-color .25s}
+.height-value,.leg-value{font-weight:bold;font-size:18px;color:#2b5ba8;width:56px;flex:0 0 56px;text-align:left;font-variant-numeric:tabular-nums;transition:color .25s}
+.leg-hint{font-weight:bold;font-size:12px;color:#e67e22;line-height:1.7;display:block}
+.leg-hint-outer{max-height:0;margin-top:-11px;overflow:hidden;opacity:0;transform:translateY(-6px);transition:max-height .28s cubic-bezier(.22,.61,.36,1),opacity .22s ease-out,transform .28s cubic-bezier(.22,.61,.36,1),margin-top .28s cubic-bezier(.22,.61,.36,1)}
+.leg-hint-outer.show{max-height:200px;margin-top:0;opacity:1;transform:translateY(0)}
+.leg-hint-outer > .control-row{min-height:0;overflow:hidden}
+.status-text{width:100%;text-align:left;max-height:0;overflow:hidden;padding-top:0;border-top:1px dashed transparent;transition:max-height .38s cubic-bezier(.22,.61,.36,1),padding-top .38s cubic-bezier(.22,.61,.36,1),border-color .3s ease-out}
+.status-text.expanded{max-height:600px;padding-top:10px;border-top-color:#eee}
+.status-inner{min-height:0;font-weight:bold;font-size:14px;color:#333;display:flex;flex-direction:column;align-items:stretch;transform:translateY(-30px);transition:transform .38s cubic-bezier(.22,.61,.36,1)}
+.status-text.expanded .status-inner{transform:translateY(0)}
+.status-info-line{width:100%;text-align:left;font-size:13px;font-weight:600;color:#5a6472;margin-bottom:7px;line-height:1.5}
+.status-badges-line{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:2px 14px;width:100%}
+.status-badge{background:transparent;border:none;box-shadow:none;padding:2px 4px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#5a6472;font-weight:600;cursor:default;pointer-events:none;user-select:text}
+.status-badge span.color-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-badge strong{color:#222;font-weight:800}
+.status-badge.focused-badge{background:#e6f6ec;color:#3d6b4c}
+.status-badge.focused-badge strong{color:#1e7e34}
+.step-btn{width:28px;height:28px;border:1px solid #cddcee;background:#fff;color:#2b5ba8;border-radius:50%;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;transition:.15s;touch-action:manipulation;line-height:0}
+.step-btn:hover{background:#2b5ba8;color:#fff}
+.step-btn:active{transform:scale(.9)}
+.step-btn svg{display:block;pointer-events:none}
+.recommend-header{display:flex;align-items:center;gap:8px;width:100%;padding:0 0 11px;border-bottom:1px solid #edf1f6;user-select:none;-webkit-user-select:none;flex-wrap:wrap}
+.recommend-header .rh-text{font-size:18px;font-weight:800;color:#1f2937;letter-spacing:1.2px;line-height:1.15;white-space:nowrap}
+.algo-select{padding:5px 26px 5px 12px;border:1.5px solid #2b5ba8;border-radius:14px;background:#f8fbff;color:#2b5ba8;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%232b5ba8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:10px;white-space:nowrap;transition:all .18s;margin-left:2px}
+.algo-select:hover:not(:disabled){background-color:#eaf2fb;border-color:#244d92}
+.algo-select:focus{border-color:#244d92}
+.algo-select:disabled{opacity:.55;cursor:not-allowed;background-color:#f0f2f5;color:#98a2b3;border-color:#cdd5e0;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%2398a2b3' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.row-toggle{flex:0 0 auto;border:none;background:transparent;color:#c3ccd8;font-size:21px;font-weight:400;line-height:1;font-family:inherit;padding:0;margin:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:color .2s, transform .12s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;outline:none}
+.row-toggle:hover:not(:disabled){color:#27ae60}
+.row-toggle:active:not(:disabled){transform:scale(.88)}
+.row-toggle:disabled{opacity:.35;cursor:not-allowed}
+@keyframes toggleOnPop{0%{transform:scale(.45);opacity:.25;filter:blur(1px)}55%{transform:scale(1.22);opacity:1;filter:blur(0)}78%{transform:scale(.96)}100%{transform:scale(1);opacity:1}}
+.row-toggle.active{color:#27ae60;animation:toggleOnPop .38s cubic-bezier(.34,1.45,.64,1) both}
+.slider-row{gap:7px}
+.row-label{cursor:default;transition:color .2s}
+.row-label-hit{cursor:pointer}
+.row-label-hit:hover{color:#2b5ba8}
+.slider-row.disabled label{color:#b6bec9;cursor:default}
+.slider-row.disabled .row-label-hit:hover{color:#b6bec9}
+.slider-row.disabled .step-btn{opacity:.3;pointer-events:none}
+.slider-row.disabled .slider-container input[type=range]{background:#eceff3;pointer-events:none}
+.slider-row.disabled .slider-container input[type=range]::-webkit-slider-thumb{transform:scale(0);opacity:0;box-shadow:none}
+.slider-row.disabled .slider-container input[type=range]::-moz-range-thumb{transform:scale(0);opacity:0;box-shadow:none}
+.slider-row.disabled .height-value,.slider-row.disabled .leg-value{visibility:hidden}
+.data-section{width:100%;max-max-width:100%;margin-top:20px;background:#fff;border-radius:12px;padding:0;box-shadow:0 6px 20px rgba(0,0,0,.08);overflow:hidden}
+.data-section-header{display:flex;justify-content:space-between;align-items:center;padding:15px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:background .18s}
+.data-section-header:hover{background:#f8fafc}
+.data-section-header.active{border-bottom:1px solid #edf1f6}
+.data-section-header h2{font-size:18px;color:#333;margin:0;border-left:4px solid #2b5ba8;padding-left:10px;line-height:1.2;transition:color .2s}
+.data-section-header.active h2{color:#2b5ba8}
+.data-section-icon{font-size:15px;color:#98a2b3;transition:transform .3s,color .2s;flex-shrink:0;line-height:1}
+.data-section-header.active .data-section-icon{transform:rotate(180deg);color:#2b5ba8}
+.data-section-content{display:grid;grid-template-rows:0fr;transition:grid-template-rows .1s cubic-bezier(.22,.61,.36,1)}
+.data-section-content.expanded{grid-template-rows:1fr}
+.data-section-content > .accordion{overflow:hidden;min-height:0;padding:0 15px 15px}
+.accordion{display:flex;flex-direction:column;gap:8px}
+.accordion-item{border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.02);transition:border-color .2s, box-shadow .2s}
+.accordion-item:hover{border-color:#cbd5e1;box-shadow:0 4px 10px rgba(0,0,0,.05)}
+.accordion-header{background:#f8fafc;padding:14px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14.5px;color:#334155;user-select:none;border-left:4px solid transparent;transition:background .2s, color .2s, border-left-color .2s}
+.accordion-header:hover{background:#f1f5f9;color:#1e293b}
+.accordion-header.active{color:#1d4ed8;background:#eff6ff;border-left-color:#3b82f6;border-bottom:1px solid #dbeafe}
+.accordion-icon{font-size:12px;color:#94a3b8;transition:transform .3s, color .2s;flex-shrink:0;line-height:1;display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.accordion-header.active .accordion-icon{transform:rotate(180deg);color:#3b82f6;border-color:#bfdbfe;background:#fff}
+.accordion-content{max-height:0;overflow:hidden;transition:max-height .3s ease-out;background:#fff}
+.accordion-content-inner{padding:12px;overflow-x:auto}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;min-width:760px}
+.data-table th,.data-table td{padding:8px 10px;text-align:center;border-bottom:1px solid #eee;white-space:nowrap}
+.data-table th{background:#f8f9fa;color:#555;font-weight:600}
+.data-table th.col-hidden,.data-table td.col-hidden{display:none}
+.brand-color-bar{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.28)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #eef1f5}
+.modal-title{font-size:16px;font-weight:900;color:#2b5ba8}
+.modal-close{width:30px;height:30px;border:none;background:#f0f2f5;color:#666;border-radius:50%;font-size:18px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:0;padding:0;touch-action:manipulation}
+.modal-close:hover{background:#e53935;color:#fff}
+.modal-body{padding:18px 20px;overflow-y:auto;font-size:13px;color:#444;line-height:1.75}
+.modal-body p{margin:0 0 10px}
+.modal-body ul{margin:6px 0 12px;padding-left:22px}
+.modal-body li{margin-bottom:6px}
+.modal-body strong{color:#2b5ba8}
+.str-modal-info{font-size:11.5px;color:#666;line-height:1.5;flex:1}
+.str-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.str-sort-btn{padding:4px 12px;border:1px solid #c2d3e8;border-radius:14px;background:#f8fbff;color:#2b5ba8;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;touch-action:manipulation;flex-shrink:0}
+.str-sort-btn:hover{background:#2b5ba8;color:#fff;border-color:#2b5ba8}
+.str-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid #f2f4f7;font-size:12.5px}
+.str-row:last-child{border-bottom:none}
+.str-rank{width:22px;color:#999;font-weight:700;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.str-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.str-brand{flex:1;color:#333;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.str-num{color:#2b5ba8;font-weight:800;font-variant-numeric:tabular-nums;flex-shrink:0}
+
+/* ★ 联系方式：低调灰字版 */
+.contact-section {
+  width: 100%;
+  max-width: 520px;
+  margin: 10px 0 16px;
+  padding: 0 16px;
+  font-size: 11px;
+  line-height: 1.8;
+  color: #a8b0bb;
+  text-align: center;
+  letter-spacing: .2px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.contact-tag {
+  color: #b6bdc7;
+  margin-right: 2px;
+}
+.contact-link {
+  color: #98a2b3;
+  cursor: pointer;
+  padding: 1px 6px;
+  border-radius: 6px;
+  transition: color .15s, background .15s;
+  user-select: none;
+}
+.contact-link:hover {
+  color: #2b5ba8;
+  background: #eef4fb;
+}
+.contact-link.copied {
+  color: #27ae60;
+  background: #e9f8f0;
+}
+.contact-sep {
+  color: #d5dbe4;
+  margin: 0 1px;
+}
+.contact-note {
+  color: #c7ccd4;
+  font-size: 10px;
+  font-style: italic;
+  margin-left: 6px;
+}
+.copy-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(0,0,0,.75);
+  color: #fff;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s, transform .25s;
+}
+.copy-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 520px){
+  body{padding:5px}
+  .page-title{font-size:18px;padding:18px 10px 4px;letter-spacing:.5px}
+  .page-title::before{height:6px;background:repeating-linear-gradient(90deg,#2b5ba8 0 14.28%,#3498db 14.28% 28.56%,#1abc9c 28.56% 42.84%,#f1c40f 42.84% 57.12%,#e67e22 57.12% 71.4%,#e74c3c 71.4% 85.68%,#8e44ad 85.68% 100%)}
+  .subtitle{font-size:10.5px;padding:0 12px 12px;line-height:1.5}
+  #main{height:230px}
+  .mini-chart-wrapper{width:73px;height:146px;top:12px;left:52px}
+  .mini-info-btn{width:14px;height:14px;font-size:10px;top:3px;left:3px}
+  .chart-lock-marker{width:22px;height:22px}
+  .focus-toggle{font-size:11px;padding:3px 10px;bottom:76px;right:20px;min-width:64px}
+  .select-all-toggle{font-size:11px;padding:3px 10px;bottom:47px;right:20px;min-width:64px}
+  .legend-chips-scroll{max-height:190px}
+  .legend-chip{font-size:11px;padding:4px 9px 7px;border-radius:14px;border-width:1.8px}
+  .chip-progress-track{height:6px}
+  .chip-progress-bar{border-radius:0 3px 3px 0}
+  .legend-meta{font-size:10px;gap:6px;padding:6px 0 2px}
+  .sort-bar{gap:5px;padding:8px 0 6px}
+  .sort-wrap{flex:1 1 0;min-width:0;max-width:none}
+  .sort-wrap select{font-size:11px;padding:4px 8px;border-radius:12px}
+  .sort-label{font-size:10.5px;padding:0 4px}
+  .search-overlay input{font-size:11px;padding:0 4px 0 12px}
+  .search-overlay button{flex:0 0 48px;width:48px}
+  .info-btn{width:16px;height:16px;font-size:11px;border-width:1.4px}
+  .control-panel{padding:12px 12px 11px;gap:9px}
+  .control-row{gap:8px;flex-wrap:wrap}
+  .height-value,.leg-value{font-size:14px;width:44px;flex:0 0 44px;font-variant-numeric:tabular-nums}
+  .step-btn{width:26px;height:26px}
+  .data-section{margin-top:15px}
+  .data-section-header{padding:12px}
+  .data-section-content > .accordion{padding:0 12px 12px}
+  .data-table th,.data-table td{padding:6px 8px;font-size:11px}
+  .str-display{font-size:10px;padding:3px 8px;left:47px;bottom:44px}
+  .node-popup{max-width:min(260px,calc(100vw - 40px));font-size:11.5px;padding:9px 12px;background:rgba(255,255,255,.4);backdrop-filter:blur(4px) saturate(1.3);-webkit-backdrop-filter:blur(4px) saturate(1.3);text-shadow:0 0 2px rgba(255,255,255,.9),0 0 4px rgba(255,255,255,.7)}
+  .node-popup .np-diff{font-size:11px;padding:5px 6px}
+  .recommend-header{padding:0 0 9px;gap:6px}
+  .recommend-header .rh-text{font-size:15.5px;letter-spacing:.8px}
+  .algo-select{font-size:11px;padding:4px 22px 4px 10px;background-size:9px}
+  .control-panel label{font-size:12.5px}
+  .row-toggle{font-size:19px;width:24px;height:24px}
+  .slider-row{gap:6px}
+  .accordion-header{padding:12px 14px;font-size:13.5px}
+  .accordion-icon{width:20px;height:20px;font-size:10px}
+  .accordion-content-inner{padding:8px}
+  .contact-section { font-size: 10.5px; margin: 8px 0 14px; padding: 0 12px; }
+  .contact-note { display: none; }
+}
+</style>
+/* ── BIKESIZE 品牌徽标与页脚（适配博客 UI） ── */
+.bike-badge{display:inline-block;vertical-align:middle;margin-right:10px;padding:2px 10px;border-radius:20px;background:#2b5ba8;color:#fff;font-size:12px;font-weight:800;letter-spacing:1px;font-family:inherit;line-height:22px}
+body{font-family:'Open Sans','Microsoft Yahei',system-ui,sans-serif}
+.page-title{display:flex;align-items:center}
+.page-footer{width:100%;box-sizing:border-box;text-align:center;font-size:11.5px;color:#999;padding:18px 10px 8px;line-height:1.7}
+.page-footer a{color:#2b5ba8;text-decoration:none}
+.page-footer a:hover{text-decoration:underline}</style>
+</head>
+<body><div class="page-title">公路车几何对比与尺码推荐</div>
+<div class="subtitle">📐 尺码推荐说明：推荐尺码以各品牌官网数据为参照，但因个人身体比例差异，实际选码请以试骑或专业 Fitting 为准。</div>
+<div class="chart-card">
+  <div class="chart-main-wrapper">
+    <div id="main"></div>
+    <!-- ★ 缩略图：1:2 竖条，4×8 固定方格，红点在左上角 -->
+    <div class="mini-chart-wrapper" id="miniChartWrapper" title="点击查看缩略图说明">
+      <div id="miniChart"></div>
+      <button type="button" class="mini-info-btn" id="miniInfoBtn" aria-label="缩略图说明">i</button>
+    </div>
+    <div class="node-popup" id="nodePopup"></div>
+    <!-- ★ 图表上的锁定标记（放大出现 / 缩小消失） -->
+    <div class="chart-lock-marker" id="chartLockMarker" aria-hidden="true"></div>
+    <div class="str-display" id="strDisplay" onclick="showStrModal()"></div>
+    <button type="button" class="focus-toggle active" id="focusToggle">聚焦◉</button>
+    <button type="button" class="select-all-toggle" id="toggleAllBtn">选中所有</button>
+  </div>
+  <div class="legend-panel">
+    <div class="sort-bar">
+      <div class="sort-wrap">
+        <select id="sortSelect" data-kind="default" aria-label="排序"></select>
+        <span class="sort-label" id="sortLabel">排序：默认</span>
+        <div class="search-overlay hidden" id="searchOverlay">
+          <input type="text" id="searchInput" placeholder="输入关键字...">
+          <button type="button" id="searchConfirmBtn" aria-label="搜索">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><circle cx="10" cy="10" r="6.2"/><path d="M15.1 15.1 L20.8 20.8"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="sort-wrap">
+        <select id="barSelect" data-kind="bar" aria-label="彩条维度"></select>
+        <span class="sort-label" id="barLabel">彩条：STR 激进程度</span>
+      </div>
+      <button type="button" class="info-btn" id="barHelpBtn" title="彩条维度说明" aria-label="彩条维度说明">i</button>
+    </div>
+    <div class="legend-chips-scroll" id="chipsScroll">
+      <div class="legend-chips" id="legendChips"></div>
+    </div>
+    <div class="legend-meta">
+      <span>共 <strong id="brandCount">0</strong> 款车型</span>
+      <span class="meta-dot">·</span>
+      <span class="meta-hint">上下滑动上方区域查看更多车型</span>
+      <span class="meta-dot">·</span>
+      <span>最后更新 <strong id="lastUpdate">2026-10-12</strong></span>
+    </div>
+  </div>
+</div>
+
+<div class="control-panel">
+  <div class="recommend-header">
+    <span class="rh-text">尺码推荐</span>
+    <button type="button" class="info-btn" onclick="showAlgoModal()" aria-label="算法说明" title="尺码推荐算法说明">i</button>
+    <select id="algoSelect" class="algo-select" aria-label="推荐算法" disabled>
+      <option value="official">品牌官网推荐</option>
+      <option value="baseline">几何基准线</option>
+    </select>
+  </div>
+
+  <div class="control-row slider-row disabled" id="heightRow">
+    <button type="button" class="row-toggle" id="heightToggle" aria-label="身高推荐开关" aria-pressed="false">○</button>
+    <label class="row-label" id="heightLabel"><span class="row-label-hit" id="heightLabelHit">身高</span> (cm)：</label>
+    <div class="slider-container">
+      <button type="button" class="step-btn" id="heightMinus" aria-label="减小"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="2.5" y="6.25" width="9" height="1.5" rx="0.75" fill="currentColor"/></svg></button>
+      <input type="range" id="heightSlider" min="150" max="205" value="150" step="0.5" autocomplete="off">
+      <button type="button" class="step-btn" id="heightPlus" aria-label="增大"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="2.5" y="6.25" width="9" height="1.5" rx="0.75" fill="currentColor"/><rect x="6.25" y="2.5" width="1.5" height="9" rx="0.75" fill="currentColor"/></svg></button>
+      <span class="height-value" id="heightDisplay">150</span>
+    </div>
+  </div>
+
+  <div class="control-row slider-row disabled" id="legRow">
+    <button type="button" class="row-toggle" id="legToggle" aria-label="跨高开关" aria-pressed="false" disabled>○</button>
+    <label class="row-label" id="legLabel"><span class="row-label-hit" id="legLabelHit">跨高</span> (cm)：</label>
+    <div class="slider-container">
+      <button type="button" class="step-btn" id="legMinus" aria-label="减小"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="2.5" y="6.25" width="9" height="1.5" rx="0.75" fill="currentColor"/></svg></button>
+      <input type="range" id="legSlider" min="68" max="100" value="68" step="0.5" autocomplete="off">
+      <button type="button" class="step-btn" id="legPlus" aria-label="增大"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="2.5" y="6.25" width="9" height="1.5" rx="0.75" fill="currentColor"/><rect x="6.25" y="2.5" width="1.5" height="9" rx="0.75" fill="currentColor"/></svg></button>
+      <span class="leg-value" id="legDisplay">68</span>
+    </div>
+  </div>
+
+  <div class="leg-hint-outer" id="legHintOuter">
+    <div class="control-row" id="legHintRow">
+      <div class="leg-hint">为避免不可控的停车落地对车手造成的下体伤害，当 [车手跨高值 − 车架跨高值 &lt; 安全界限值] 时，会下修尺码，而图表中的圆形虚线则是下修前的最佳尺码。个人建议下修太多需要考虑换压缩车型。</div>
+    </div>
+  </div>
+
+  <div class="status-text" id="statusText">
+    <div class="status-inner" id="statusInner"></div>
+  </div>
+</div>
+
+<div class="data-section">
+  <div class="data-section-header" id="dataSectionToggle">
+    <h2>各品牌几何数据</h2>
+    <span class="data-section-icon">▼</span>
+  </div>
+  <div class="data-section-content" id="dataSectionContent">
+    <div class="accordion" id="accordionContainer"></div>
+  </div>
+</div><!-- ★ 联系方式：指向本博客 -->
+<div class="contact-section">
+  <span class="contact-tag">📮 更多作品与反馈：</span>
+  <span class="contact-link" onclick="copyContact('https://tangjianpeng.com', this)">复制 博客地址</span>
+  <span class="contact-sep">/</span>
+  <span class="contact-link" onclick="copyContact('BIKESIZE · 公路车几何对比与尺码推荐', this)">复制 项目名称</span>
+  <span class="contact-note">点击文字自动复制</span>
+</div><div class="modal-overlay" id="algoModal" onclick="if(event.target===this)hideAlgoModal()">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">尺码推荐算法说明</div><button class="modal-close" onclick="hideAlgoModal()" aria-label="关闭">×</button></div>
+    <div class="modal-body" id="algoModalBody"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="strModal" onclick="if(event.target===this)hideStrModal()">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="strModalTitle">平均 STR 排行</div><button class="modal-close" onclick="hideStrModal()" aria-label="关闭">×</button></div>
+    <div class="modal-body"><div id="strModalContent"></div></div>
+  </div>
+</div>
+<div class="modal-overlay" id="barHelpModal" onclick="if(event.target===this)hideBarHelpModal()">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">彩条维度说明</div><button class="modal-close" onclick="hideBarHelpModal()" aria-label="关闭">×</button></div>
+    <div class="modal-body">
+      <p><strong>STR 激进程度：</strong>STR = Stack ÷ Reach。彩条填充百分比越大 → 越激进（骑行姿态越趴）。</p>
+      <p><strong>跨高要求：</strong>彩条填充百分比越大 → 对车手腿长要求越高。</p>
+      <p><strong>立管角度（需开启身高）：</strong>彩条填充百分比越大 → 坐垫位置更靠前。会随当前身高下推荐的尺码实时变化。</p>
+      <p style="color:#e67e22;font-size:12px;background:#fff5eb;border-left:3px solid #e67e22;padding:8px 10px;border-radius:6px;margin:8px 0;">
+        ⚠️ 芯片宽度受车型名字长短影响，请以彩色填充条占芯片底部的<b>百分比</b>为准。
+      </p>
+    </div>
+  </div>
+</div>
+<!-- ★ 缩略图说明弹窗 -->
+<div class="modal-overlay" id="miniInfoModal" onclick="if(event.target===this)hideMiniInfoModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">真实比例缩略图</div>
+      <button class="modal-close" onclick="hideMiniInfoModal()" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <p>此缩略图采用 Reach 与 Stack 的 1:1 比例展示车型的真实几何形态。通过对比可以看出：</p>
+      <p>当尺码变化时，<strong>Stack 的变化幅度远大于 Reach</strong>，这也是为什么大尺码车架看起来更“高”而不是更“长”。</p>
+    </div>
+  </div>
+</div><script src="/vendor/echarts.min.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+<div class="page-footer">BIKESIZE · 由 <a href="https://tangjianpeng.com" target="_blank" rel="noopener">tangjianpeng.com</a> 提供 · 几何数据参考各品牌官网，更新于 2026-10-12</div>
+</body>
+</html>
