@@ -1,3 +1,18 @@
+/* Local Open Sans (self-hosted, same weights as before: 300/800) */
+@font-face {
+	font-family: 'Open Sans';
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url('/vendor/fonts/open-sans-latin-300-normal.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Open Sans';
+	font-style: normal;
+	font-weight: 800;
+	font-display: swap;
+	src: url('/vendor/fonts/open-sans-latin-800-normal.woff2') format('woff2');
+}
 body {
 	font-family: 'Open Sans', "Microsoft Yahei";
 }
