@@ -5,7 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>BIKESIZE · 公路车几何对比与尺码推荐</title>
 <link rel="icon" href="/favicon/favicon.ico">
-<style>  position:absolute;
+<style>html,body{touch-action:manipulation;overflow-x:hidden;max-width:100vw}
+body{margin:0 auto;padding:10px;font-family:system-ui,sans-serif;background:#f0f2f5;display:flex;flex-direction:column;align-items:center;min-height:100vh;width:100%;max-width:520px}
+.page-title{width:100%;max-max-width:100%;background:#2b5ba8;color:#fff;font-size:22px;font-weight:900;text-align:center;padding:22px 16px 6px;border-radius:12px 12px 0 0;position:relative;overflow:hidden;letter-spacing:.8px;text-shadow:0 1px 4px rgba(0,0,0,.28)}
+.page-title::before{content:'';position:absolute;top:0;left:0;right:0;height:7.5px;background:repeating-linear-gradient(90deg,#2b5ba8 0 14.28%,#3498db 14.28% 28.56%,#1abc9c 28.56% 42.84%,#f1c40f 42.84% 57.12%,#e67e22 57.12% 71.4%,#e74c3c 71.4% 85.68%,#8e44ad 85.68% 100%)}
+.subtitle{width:100%;max-max-width:100%;background:linear-gradient(180deg,#2b5ba8 0%,#26519a 100%);color:rgba(255,255,255,.82);font-size:12px;line-height:1.5;text-align:center;padding:0 20px 16px}
+.chart-card{width:100%;max-max-width:100%;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.12);position:relative;z-index:1}
+.chart-main-wrapper{position:relative;width:100%;max-width:100%;margin:0 auto;overflow:visible}
+#main{width:100%;height:260px;background:#fff;touch-action:pan-y;cursor:default}
+
+/* ★ 缩略图容器：1:2 竖条，位置在 Stack 轴右侧 */
+.mini-chart-wrapper{
+  position:absolute;
   top:8px;
   left:54px;
   width:80px;
@@ -400,7 +411,6 @@
   .contact-section { font-size: 10.5px; margin: 8px 0 14px; padding: 0 12px; }
   .contact-note { display: none; }
 }
-</style>
 /* ── BIKESIZE 品牌徽标与页脚（适配博客 UI） ── */
 .bike-badge{display:inline-block;vertical-align:middle;margin-right:10px;padding:2px 10px;border-radius:20px;background:#2b5ba8;color:#fff;font-size:12px;font-weight:800;letter-spacing:1px;font-family:inherit;line-height:22px}
 body{font-family:'Open Sans','Microsoft Yahei',system-ui,sans-serif}
@@ -488,7 +498,6 @@ body{font-family:'Open Sans','Microsoft Yahei',system-ui,sans-serif}
       <span class="leg-value" id="legDisplay">68</span>
     </div>
   </div>
-
   <div class="leg-hint-outer" id="legHintOuter">
     <div class="control-row" id="legHintRow">
       <div class="leg-hint">为避免不可控的停车落地对车手造成的下体伤害，当 [车手跨高值 − 车架跨高值 &lt; 安全界限值] 时，会下修尺码，而图表中的圆形虚线则是下修前的最佳尺码。个人建议下修太多需要考虑换压缩车型。</div>
