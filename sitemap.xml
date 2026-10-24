@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://tangjianpeng.com/work/bikesize/index.html</loc>
+    <loc>https://tangjianpeng.com/posts/1940363416.html</loc>
     
     <lastmod>2026-10-24</lastmod>
     
@@ -29,7 +29,7 @@
   </url>
   
   <url>
-    <loc>https://tangjianpeng.com/posts/1183334052.html</loc>
+    <loc>https://tangjianpeng.com/posts/2479027459.html</loc>
     
     <lastmod>2026-10-24</lastmod>
     
@@ -56,7 +56,7 @@
   </url>
   
   <url>
-    <loc>https://tangjianpeng.com/posts/1940363416.html</loc>
+    <loc>https://tangjianpeng.com/posts/4212283802.html</loc>
     
     <lastmod>2026-10-24</lastmod>
     
@@ -65,7 +65,7 @@
   </url>
   
   <url>
-    <loc>https://tangjianpeng.com/posts/4212283802.html</loc>
+    <loc>https://tangjianpeng.com/posts/1183334052.html</loc>
     
     <lastmod>2026-10-24</lastmod>
     
@@ -83,7 +83,16 @@
   </url>
   
   <url>
-    <loc>https://tangjianpeng.com/posts/2479027459.html</loc>
+    <loc>https://tangjianpeng.com/work/bikesize/index.html</loc>
+    
+    <lastmod>2026-10-24</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://tangjianpeng.com/posts/2645272983.html</loc>
     
     <lastmod>2026-10-24</lastmod>
     
